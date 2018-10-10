@@ -23,3 +23,8 @@ main = do
   runParser "1*2-3/4+5"
   runParser "!"
   runParser "1 + 2"
+  runParser "(9)"
+  runParser "(1 + 3)"
+  runParser "12 * 13 + 2345 - 123 + (125*3)"
+  runParser "var = 34"
+  runParser "var = qwe = (123 + asd)"

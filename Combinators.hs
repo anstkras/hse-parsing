@@ -66,6 +66,11 @@ elem [] = Error "Empty string"
 char :: Char -> Parser Char
 char c = sat (== c) elem
 
+-- Check if the input is empty
+empty :: a -> Parser a
+empty input [] = Success (input, [])
+empty _ _ = Error "Input is not empty"
+
 -- Skips zero or more white space characters
 spaces :: Parser String
 spaces (c : cs) | isSpace c = spaces cs
@@ -79,6 +84,16 @@ sat pred parser inp =
     Success _ -> Error "Predicate is not satisfied"
     Error err -> Error err
 
+many :: Parser a -> Parser [a]
+many p input = 
+  case p input of 
+    Error err -> Success ([], input)
+    Success (r, inp') -> ((return r) >>=- (\r -> map (r:) (many p))) inp'
+
+-- Parses one or more occurrences of the given parser.
+many1 :: Parser a -> Parser [a]
+many1 p = p >>=- (\r -> map (r:) (many p))
+  
 -- Applies the function to the result of the parser
 map :: (a -> b) -> Parser a -> Parser b
 map f parser inp =

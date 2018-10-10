@@ -6,9 +6,10 @@ import Prelude hiding (lookup, (>>=), map, pred, return, elem)
 
 data AST = ASum T.Operator AST AST
          | AProd T.Operator AST AST
-         | AAssign Char AST
+         | AAssign String AST
          | ANum Integer
-         | AIdent Char
+         | AIdent String
+
 
 -- TODO: Rewrite this without using Success and Error
 parse :: String -> Maybe (Result AST)
@@ -51,13 +52,19 @@ factor =
     rparen |>- return e -- No need to keep the parentheses
   )
   <|> identifier
-  <|> digit
+  <|> number
 
-digit :: Parser AST
-digit      = map (ANum   . T.digit) (sat T.isDigit elem)
+digit :: Parser Char
+digit = sat T.isDigit elem
+
+number :: Parser AST
+number = map (ANum . read) (many1 digit)
+
+alpha :: Parser Char
+alpha = sat T.isAlpha elem
 
 identifier :: Parser AST
-identifier = map (AIdent . T.alpha) (sat T.isAlpha elem)
+identifier =  map (AIdent) (many1 alpha)
 
 lparen :: Parser Char
 lparen = char '('
@@ -85,7 +92,7 @@ instance Show AST where
         (case t of
                   ASum  op l r -> showOp op : "\n" ++ show' (ident n) l ++ "\n" ++ show' (ident n) r
                   AProd op l r -> showOp op : "\n" ++ show' (ident n) l ++ "\n" ++ show' (ident n) r
-                  AAssign  v e -> v : " =\n" ++ show' (ident n) e
+                  AAssign  v e -> v ++ " =\n" ++ show' (ident n) e
                   ANum   i     -> show i
                   AIdent i     -> show i)
       ident = (+1)
