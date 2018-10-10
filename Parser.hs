@@ -24,31 +24,31 @@ parse input =
 
 expression :: Parser AST
 expression =
-  ( identifier >>= \(AIdent i) ->
-    assignment |>
-    expression >>= \e -> return (AAssign i e)
+  ( identifier >>=- \(AIdent i) ->
+    assignment |>-
+    expression >>=- \e -> return (AAssign i e)
   )
-  <|> ( term       >>= \l  -> -- Here the identifier is parsed twice :(
-        plusMinus  >>= \op ->
-        expression >>= \r  -> return (ASum op l r)
+  <|> ( term       >>=- \l  -> -- Here the identifier is parsed twice :(
+        plusMinus  >>=- \op ->
+        expression >>=- \r  -> return (ASum op l r)
       )
   <|> term
 
 term :: Parser AST
 term =
   -- make sure we don't reparse the factor (Term -> Factor (('/' | '*') Term | epsilon ))
-  factor >>= \l ->
-  ( ( divMult >>= \op ->
-      term    >>= \r  -> return (AProd op l r)
+  factor >>=- \l ->
+  ( ( divMult >>=- \op ->
+      term    >>=- \r  -> return (AProd op l r)
     )
     <|> return l
   )
 
 factor :: Parser AST
 factor =
-  ( lparen |>
-    expression >>= \e ->
-    rparen |> return e -- No need to keep the parentheses
+  ( lparen |>-
+    expression >>=- \e ->
+    rparen |>- return e -- No need to keep the parentheses
   )
   <|> identifier
   <|> digit

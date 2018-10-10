@@ -1,7 +1,7 @@
 module Combinators where
 -- Make sure that the names don't clash
 import Prelude hiding (lookup, (>>=), map, pred, return, elem)
-
+import Data.Char
 -- Input abstraction
 type Input = String
 
@@ -31,10 +31,23 @@ p >>= q = \inp ->
     Success (r, inp') -> q r inp'
     Error err -> Error err
 
+-- The version of (>>=) that skips any number of white spaces between parsers
+infixl 7 >>=-
+(>>=-) :: Parser a -> (a -> Parser b ) -> Parser b
+p >>=- q = \inp ->
+  case p inp of
+    Success (r, inp') -> (spaces |> q r) inp'
+    Error err -> Error err
+
 -- Sequential combinator which ignores the result of the first parser
 infixl 7 |>
 (|>) :: Parser a -> Parser b -> Parser b
 p |> q = p >>= const q
+
+-- The version of (|>) that skips any number of white spaces between parsers
+infixl 7 |>-
+(|>-) :: Parser a -> Parser b -> Parser b
+p |>- q = p >>=- const q
 
 -- Succeedes without consuming any input, returning a value
 return :: a -> Parser a
@@ -52,6 +65,11 @@ elem [] = Error "Empty string"
 -- Checks if the first character of the string is the given one
 char :: Char -> Parser Char
 char c = sat (== c) elem
+
+-- Skips zero or more white space characters
+spaces :: Parser String
+spaces (c : cs) | isSpace c = spaces cs
+spaces input = Success("", input)
 
 -- Checks if the parser result satisfies the predicate
 sat :: (a -> Bool) -> Parser a -> Parser a
