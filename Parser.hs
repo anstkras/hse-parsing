@@ -6,6 +6,8 @@ import Prelude hiding (lookup, (>>=), map, pred, return, elem)
 
 data AST = ASum T.Operator AST AST
          | AProd T.Operator AST AST
+         | APow AST AST
+         | AUnMinus AST
          | AAssign String AST
          | ANum Integer
          | AIdent String
@@ -47,6 +49,20 @@ term =
 
 factor :: Parser AST
 factor =
+  final >>=- \l ->
+  ( ( pow >>=- \_ ->
+    factor >>=- \r -> return (APow l r)
+    )
+    <|> return l
+  )
+
+
+final :: Parser AST
+final =
+  ( minus >>=- \_ ->
+    final >>=- \fin -> return (AUnMinus fin)
+  )
+  <|>
   ( lparen |>-
     expression >>=- \e ->
     rparen |>- return e -- No need to keep the parentheses
@@ -78,6 +94,12 @@ assignment = char '='
 plusMinus :: Parser T.Operator
 plusMinus = map T.operator (char '+' <|> char '-')
 
+minus :: Parser T.Operator
+minus = map T.operator (char '-')
+
+pow :: Parser T.Operator
+pow = map T.operator (char '^')
+
 divMult :: Parser T.Operator
 divMult   = map T.operator (char '/' <|> char '*')
 
@@ -94,9 +116,12 @@ instance Show AST where
                   AProd op l r -> showOp op : "\n" ++ show' (ident n) l ++ "\n" ++ show' (ident n) r
                   AAssign  v e -> v ++ " =\n" ++ show' (ident n) e
                   ANum   i     -> show i
-                  AIdent i     -> show i)
+                  AIdent i     -> show i
+                  AUnMinus e   -> showOp T.Minus : "\n" ++ show' (ident n) e
+                  APow l r     -> showOp T.Pow : "\n" ++ show' (ident n) l ++ "\n" ++ show' (ident n) r)
       ident = (+1)
       showOp T.Plus  = '+'
       showOp T.Minus = '-'
       showOp T.Mult  = '*'
       showOp T.Div   = '/'
+      showOp T.Pow   = '^'

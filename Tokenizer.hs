@@ -4,16 +4,18 @@ data Operator = Plus
               | Minus
               | Mult
               | Div
+              | Pow
               deriving (Show, Eq)
 
 isOperator :: Char -> Bool
-isOperator x = x `elem` "+-*/"
+isOperator x = x `elem` "+-*/^"
 
 operator :: Char -> Operator
 operator c | c == '+' = Plus
            | c == '-' = Minus
            | c == '*' = Mult
            | c == '/' = Div
+           | c == '^' = Pow
 operator c = error ("Lexical error: " ++ c : " is not an operator!")
 
 isDigit :: Char -> Bool
