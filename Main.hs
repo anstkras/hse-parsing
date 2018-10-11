@@ -39,3 +39,4 @@ main = do
   runParser "1-(2-3)"
   runParser "-2^2"
   runParser "(-2)^2"
+  runParser "x = 13;\ny = z = 42 + 6;\n777"

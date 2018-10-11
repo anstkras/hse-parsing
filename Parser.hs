@@ -11,6 +11,7 @@ data AST = ASum T.Operator AST AST
          | AAssign String AST
          | ANum Integer
          | AIdent String
+         | ACode AST AST -- ACode expression code
 
 
 -- TODO: Rewrite this without using Success and Error
@@ -18,12 +19,19 @@ parse :: String -> Maybe (Result AST)
 parse input =
   case input of
     [] -> Nothing
-    _ -> case expression input of
+    _ -> case code input of
            Success (tree, ts') ->
              if null ts'
              then Just (Success tree)
              else Just (Error ("Syntax error on: " ++ show ts')) -- Only a prefix of the input is parsed
            Error err -> Just (Error err) -- Legitimate syntax error
+
+code :: Parser AST
+code =
+  expression >>=- \expr ->
+  ( ( semicolon |>- code >>=- \code -> return (ACode expr code) )
+  <|> return expr
+  )
 
 expression :: Parser AST
 expression =
@@ -88,6 +96,9 @@ lparen = char '('
 rparen :: Parser Char
 rparen = char ')'
 
+semicolon :: Parser Char
+semicolon = char ';'
+
 assignment :: Parser Char
 assignment = char '='
 
@@ -118,7 +129,8 @@ instance Show AST where
                   ANum   i     -> show i
                   AIdent i     -> show i
                   AUnMinus e   -> showOp T.Minus : "\n" ++ show' (ident n) e
-                  APow l r     -> showOp T.Pow : "\n" ++ show' (ident n) l ++ "\n" ++ show' (ident n) r)
+                  APow l r     -> showOp T.Pow : "\n" ++ show' (ident n) l ++ "\n" ++ show' (ident n) r
+                  ACode expr code -> show expr ++ "\n" ++  show code)
       ident = (+1)
       showOp T.Plus  = '+'
       showOp T.Minus = '-'
