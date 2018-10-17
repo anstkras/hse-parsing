@@ -28,7 +28,7 @@ parse input =
 
 code :: Parser AST
 code =
-  expression >>=- \expr ->
+  (spaces |>- expression) >>=- \expr ->
   ( ( semicolon |>- code >>=- \code -> return (ACode expr code) )
   <|> return expr
   )

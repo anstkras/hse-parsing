@@ -40,3 +40,7 @@ main = do
   runParser "-2^2"
   runParser "(-2)^2"
   runParser "x = 13;\ny = z = 42 + 6;\n777"
+  runParser " (((9)))"
+  runParser "a * b / c * d"
+  runParser "( (   ( 9)  ))    "
+  runParser " sadf    +  sfds + 43^(a   = 5);    -32^-21  ; a  "
