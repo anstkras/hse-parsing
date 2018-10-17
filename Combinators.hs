@@ -67,9 +67,9 @@ char :: Char -> Parser Char
 char c = sat (== c) elem
 
 -- Check if the input is empty
-empty :: a -> Parser a
-empty input [] = Success (input, [])
-empty _ _ = Error "Input is not empty"
+empty :: Parser String
+empty [] = Success ("", [])
+empty _ = Error "Input is not empty"
 
 -- Skips zero or more white space characters
 spaces :: Parser String
@@ -100,3 +100,8 @@ map f parser inp =
   case parser inp of
     Success (r, inp') -> Success (f r, inp')
     Error err -> Error err
+
+-- Applies the function to result
+map' :: (a -> b) -> Result a -> Result b
+map' f (Success a) = Success $ f a
+map' f (Error err) = Error err
