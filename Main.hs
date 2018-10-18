@@ -45,3 +45,7 @@ main = do
   runParser "( (   ( 9)  ))    "
   runParser " sadf    +  sfds + 43^(a   = 5);    -32^-21  ; a  "
   runParser "fsdf + a +"
+  runParser "x^y"
+  runParser "x y = z"
+  runParser "  xy = 12 2 "
+  runParser "xy = 12 "

@@ -88,11 +88,11 @@ many :: Parser a -> Parser [a]
 many p input = 
   case p input of 
     Error err -> Success ([], input)
-    Success (r, inp') -> ((return r) >>=- (\r -> map (r:) (many p))) inp'
+    Success (r, inp') -> ((return r) >>= (\r -> map (r:) (many p))) inp'
 
 -- Parses one or more occurrences of the given parser.
 many1 :: Parser a -> Parser [a]
-many1 p = p >>=- (\r -> map (r:) (many p))
+many1 p = p >>= (\r -> map (r:) (many p))
   
 -- Applies the function to the result of the parser
 map :: (a -> b) -> Parser a -> Parser b
