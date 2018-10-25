@@ -1,7 +1,7 @@
 module Combinators where
 -- Make sure that the names don't clash
 import Prelude hiding (lookup, (>>=), map, pred, return, elem)
-
+import Data.Char
 -- Input abstraction
 type Input = String
 
@@ -31,10 +31,23 @@ p >>= q = \inp ->
     Success (r, inp') -> q r inp'
     Error err -> Error err
 
+-- The version of (>>=) that skips any number of white spaces between parsers
+infixl 7 >>=-
+(>>=-) :: Parser a -> (a -> Parser b ) -> Parser b
+p >>=- q = \inp ->
+  case p inp of
+    Success (r, inp') -> (spaces |> q r) inp'
+    Error err -> Error err
+
 -- Sequential combinator which ignores the result of the first parser
 infixl 7 |>
 (|>) :: Parser a -> Parser b -> Parser b
 p |> q = p >>= const q
+
+-- The version of (|>) that skips any number of white spaces between parsers
+infixl 7 |>-
+(|>-) :: Parser a -> Parser b -> Parser b
+p |>- q = p >>=- const q
 
 -- Succeedes without consuming any input, returning a value
 return :: a -> Parser a
@@ -53,6 +66,16 @@ elem [] = Error "Empty string"
 char :: Char -> Parser Char
 char c = sat (== c) elem
 
+-- Check if the input is empty
+empty :: Parser String
+empty [] = Success ("", [])
+empty _ = Error "Input is not empty"
+
+-- Skips zero or more white space characters
+spaces :: Parser String
+spaces (c : cs) | isSpace c = spaces cs
+spaces input = Success("", input)
+
 -- Checks if the parser result satisfies the predicate
 sat :: (a -> Bool) -> Parser a -> Parser a
 sat pred parser inp =
@@ -61,9 +84,24 @@ sat pred parser inp =
     Success _ -> Error "Predicate is not satisfied"
     Error err -> Error err
 
+many :: Parser a -> Parser [a]
+many p input = 
+  case p input of 
+    Error err -> Success ([], input)
+    Success (r, inp') -> ((return r) >>= (\r -> map (r:) (many p))) inp'
+
+-- Parses one or more occurrences of the given parser.
+many1 :: Parser a -> Parser [a]
+many1 p = p >>= (\r -> map (r:) (many p))
+  
 -- Applies the function to the result of the parser
 map :: (a -> b) -> Parser a -> Parser b
 map f parser inp =
   case parser inp of
     Success (r, inp') -> Success (f r, inp')
     Error err -> Error err
+
+-- Applies the function to result
+map' :: (a -> b) -> Result a -> Result b
+map' f (Success a) = Success $ f a
+map' f (Error err) = Error err
